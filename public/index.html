@@ -25,29 +25,7 @@
     <flowise-fullchatbot></flowise-fullchatbot>
   </div>
 
-  <!-- MODEL‐INJECTION (into every /prediction) -->
-  <script>
-  //   window.__selectedModel = document.getElementById('modelSelect').value;
-  //   document.getElementById('modelSelect')
-  //     .addEventListener('change', e => window.__selectedModel = e.target.value);
-
-  //   const _orig = fetch.bind(window);
-  //   window.fetch = (url, init = {}) => {
-  //     if (typeof url === 'string' && url.includes('/api/v1/prediction/')) {
-  //       try {
-  //         const body = JSON.parse(init.body || '{}');
-  //         body.question = `[MODEL:${window.__selectedModel}]`
-  //                       + ' ' + (body.question || '');
-  //         init = { ...init, body: JSON.stringify(body) };
-  //       } catch (e) {
-  //         console.warn('model injection failed', e);
-  //       }
-  //     }
-  //     return _orig(url, init);
-  //   };
-  // 
-  // </script>
-
+  
  <script type="module">
   import Chatbot from 'http://localhost:3001/web.js';
 
@@ -88,6 +66,19 @@
     }
   });
 </script>
+<!-- 
+<flowise-fullchatbot></flowise-fullchatbot>
+<script type="module">
+  import Chatbot from 'https://flowisechatembed-62j6.onrender.com/web.js'
+
+  Chatbot.initFull({
+    chatflowid: '2be87efb-9c06-4965-8b0f-c4666ceb2a0d',
+    apiHost: 'https://cloud.flowiseai.com',
+apiKey: 'FBnZAKU1JfenSBCBydmysi3U9nhiP-s-x_wAoYoWCk4'
+
+  })
+</script> -->
+
 
 </body>
 </html>

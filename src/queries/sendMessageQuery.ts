@@ -10,10 +10,8 @@ export type IncomingInput = {
   chatId?: string;
   fileName?: string; // Only for assistant
   leadEmail?: string;
-  action?: IAction;
-  humanInput?: Record<string, unknown>;
-  model?: string;
-  platform?: string;
+  action?: IAction; // Indicates if the response should be streamed
+  humanInput?: Record<string, unknown>;// Indicates if the response should be streamed
 };
 
 type BaseRequest = {

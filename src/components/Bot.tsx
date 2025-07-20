@@ -38,6 +38,7 @@ import { FollowUpPromptBubble } from '@/components/bubbles/FollowUpPromptBubble'
 import { fetchEventSource, EventStreamContentType } from '@microsoft/fetch-event-source';
 import { ChevronDown } from 'lucide-solid';
 
+
 // Bot.tsx, somewhere after your other createSignal()s:
 const [started, setStarted] = createSignal(false);
 
@@ -633,15 +634,15 @@ export const Bot = (botProps: BotProps & { class?: string }) => {
   onMount(() => {
     // Check if the key 'support_EXTERNAL' exists in localStorage
     const storedChatData = localStorage.getItem('support_EXTERNAL');
-    console.log('[localStorage] Checking support_EXTERNAL:', storedChatData);
+    // console.log('[localStorage] Checking support_EXTERNAL:', storedChatData);
 
     if (storedChatData) {
       try {
         const chatData = JSON.parse(storedChatData);
-        console.log('[localStorage] Parsed support_EXTERNAL data:', chatData);
+        // console.log('[localStorage] Parsed support_EXTERNAL data:', chatData);
 
         if (Array.isArray(chatData) && chatData.some((msg) => msg.type === 'apiMessage' || msg.type === 'userMessage')) {
-          console.log('Chat data found in localStorage. Skipping landing page...');
+          // console.log('Chat data found in localStorage. Skipping landing page...');
           // Skip landing page logic
           setStarted(true); // Assuming `setStarted` is used to indicate the chat has started
           setMessages(chatData); // Load messages from localStorage
@@ -653,7 +654,7 @@ export const Bot = (botProps: BotProps & { class?: string }) => {
     }
 
     // If no valid chat data is found, proceed with the default landing page logic
-    console.log('No valid chat data found in support_EXTERNAL. Proceeding to check regular localStorage...');
+    // console.log('No valid chat data found in support_EXTERNAL. Proceeding to check regular localStorage...');
     setStarted(false); // Assuming `setStarted` is used to indicate the chat has not started
   });
 
@@ -1027,19 +1028,20 @@ export const Bot = (botProps: BotProps & { class?: string }) => {
     const chatId = params.chatId;
     const input = params.question;
     if (abortController()) {
-      console.debug('[Stream] Aborting previous controller');
+      // console.debug('[Stream] Aborting previous controller');
       abortController()?.abort();
     }
     const controller = new AbortController();
     setAbortController(controller);
     params.streaming = true;
-    fetchEventSource(`${props.apiHost}/api/v1/prediction/${chatflowid}`, {
+    await fetchEventSource(`${props.apiHost}/api/v1/prediction/${chatflowid}`, {
       openWhenHidden: false,
       signal: controller.signal,
       method: 'POST',
       body: JSON.stringify(params),
       headers: {
         'Content-Type': 'application/json',
+        'Accept': EventStreamContentType
       },
       async onopen(response) {
         if (response.ok && response.headers.get('content-type')?.startsWith(EventStreamContentType)) {
@@ -1255,10 +1257,10 @@ export const Bot = (botProps: BotProps & { class?: string }) => {
   // Debug function to test API connectivity
   const testApiConnectivity = async () => {
     try {
-      console.log('[Debug] Testing API connectivity to:', props.apiHost);
+      // console.log('[Debug] Testing API connectivity to:', props.apiHost);
 
       const testUrl = `${props.apiHost}/api/v1/prediction/${props.chatflowid}`;
-      console.log('[Debug] Test URL:', testUrl);
+      // console.log('[Debug] Test URL:', testUrl);
 
       // Test with a simple HEAD request first
       const response = await fetch(testUrl, {
@@ -1268,21 +1270,24 @@ export const Bot = (botProps: BotProps & { class?: string }) => {
         },
       });
 
-      console.log('[Debug] HEAD response:', {
-        status: response.status,
-        statusText: response.statusText,
-        headers: Object.fromEntries(response.headers.entries()),
-      });
+      // console.log('[Debug] HEAD response:', {
+      //   status: response.status,
+      //   statusText: response.statusText,
+      //   headers: Object.fromEntries(response.headers.entries()),
+      // });
 
       return response.ok;
     } catch (error) {
-      console.error('[Debug] API connectivity test failed:', error);
+      // console.error('[Debug] API connectivity test failed:', error);
       return false;
     }
   };
 
   // Handle form submission
   const handleSubmit = async (value: string | object, action?: IAction | undefined | null, humanInput?: any) => {
+    
+    // console.log('[handleSubmit] biadab');
+    
     if (!started()) setStarted(true);
     if (typeof value === 'string' && value.trim() === '') {
       const containsFile = previews().filter((item) => !item.mime.startsWith('image') && item.type !== 'audio').length > 0;
@@ -1335,7 +1340,7 @@ export const Bot = (botProps: BotProps & { class?: string }) => {
           model: selectedModel().value, // ✅ add your custom field here
           platform: selectedPlatform().platform, // (optional) anything else you need
         },
-      },
+      }
     };
 
     if (startInputType() === 'formInput') {
@@ -1373,7 +1378,8 @@ export const Bot = (botProps: BotProps & { class?: string }) => {
     if (humanInput) body.humanInput = humanInput;
 
     try {
-      console.log('[handleSubmit] streamAvailable:', streamAvailable(), 'body:', body);
+     
+      // console.log('[handleSubmit] streamAvailable:', streamAvailable(), 'body:', body);
 
       // Check network connectivity before attempting streaming
       if (!navigator.onLine) {
@@ -1383,11 +1389,12 @@ export const Bot = (botProps: BotProps & { class?: string }) => {
       // Test API connectivity in debug mode
       if (typeof process !== 'undefined' && process.env.NODE_ENV === 'development') {
         const apiConnected = await testApiConnectivity();
-        console.log('[handleSubmit] API connectivity test result:', apiConnected);
+        // console.log('[handleSubmit] API connectivity test result:', apiConnected);
       }
 
-      if (streamAvailable() === null) {
-        fetchResponseFromEventStream(props.chatflowid, body);
+      if (streamAvailable() === true) {
+        await fetchResponseFromEventStream(props.chatflowid, body);
+        return;
       } else {
         const result = await sendMessageQuery({
           chatflowid: props.chatflowid,
@@ -1439,7 +1446,7 @@ export const Bot = (botProps: BotProps & { class?: string }) => {
 
         if (result.error) {
           const error = result.error;
-          console.error(error);
+          // console.error(error);
           if (typeof error === 'object') {
             handleError(`Error: ${error?.message.replaceAll('Error:', ' ')}`);
             return;
@@ -1540,7 +1547,7 @@ export const Bot = (botProps: BotProps & { class?: string }) => {
       setMessages(messages);
     } catch (error: any) {
       const errorData = error.response.data || `${error.response.status}: ${error.response.statusText}`;
-      console.error(`error: ${errorData}`);
+      // console.error(`error: ${errorData}`);
     }
   };
 
@@ -1589,7 +1596,7 @@ export const Bot = (botProps: BotProps & { class?: string }) => {
 
   // eslint-disable-next-line solid/reactivity
   createEffect(async () => {
-    console.log('[createEffect] Starting main effect with chatflowid:', props.chatflowid);
+    // console.log('[createEffect] Starting main effect with chatflowid:', props.chatflowid);
 
     if (props.disclaimer) {
       if (getCookie('chatbotDisclaimer') == 'true') {
@@ -1602,10 +1609,10 @@ export const Bot = (botProps: BotProps & { class?: string }) => {
     }
 
     const chatMessage = getLocalStorageChatflow(props.chatflowid);
-    console.log('[createEffect] getLocalStorageChatflow result:', chatMessage);
+    // console.log('[createEffect] getLocalStorageChatflow result:', chatMessage);
 
     if (chatMessage && Object.keys(chatMessage).length) {
-      console.log('[createEffect] Found existing chat data');
+      // console.log('[createEffect] Found existing chat data');
       if (chatMessage.chatId) setChatId(chatMessage.chatId);
       const savedLead = chatMessage.lead;
       if (savedLead) {
@@ -1640,16 +1647,16 @@ export const Bot = (botProps: BotProps & { class?: string }) => {
           : [{ message: props.welcomeMessage ?? defaultWelcomeMessage, type: 'apiMessage' }];
 
       const filteredMessages = loadedMessages.filter((message) => message.type !== 'leadCaptureMessage');
-      console.log('[createEffect] Filtered messages:', filteredMessages);
+      // console.log('[createEffect] Filtered messages:', filteredMessages);
       setMessages([...filteredMessages]);
 
       // If we have existing chat history (more than just welcome message), start the chat
       if (filteredMessages.length > 1 || (filteredMessages.length === 1 && filteredMessages[0].type === 'userMessage')) {
         setStarted(true);
-        console.log('[createEffect] Chat history found, setting started to true');
+        // console.log('[createEffect] Chat history found, setting started to true');
       }
     } else {
-      console.log('[createEffect] No existing chat data found');
+      // console.log('[createEffect] No existing chat data found');
     }
 
     // Determine if particular chatflow is available for streaming
